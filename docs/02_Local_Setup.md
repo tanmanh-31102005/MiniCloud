@@ -108,3 +108,4 @@ web-frontend-server2                  cloudstudent/myminicloud-web:v1.0        U
   .\scripts\clean.ps1
   # hoặc: docker compose down -v --remove-orphans
   ```
+

@@ -79,3 +79,4 @@ Overall Result: ALL TESTS VERIFIED
 - **Phụ lục**:
   - Hướng dẫn cài đặt và vận hành nhanh (`scripts/start.ps1`, `scripts/stop.ps1`, `scripts/test.ps1`).
   - Đường dẫn Docker Hub Image Repository.
+

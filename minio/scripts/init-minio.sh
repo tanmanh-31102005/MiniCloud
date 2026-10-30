@@ -27,3 +27,4 @@ fi
 echo "MinIO initialization completed successfully!"
 mc ls myminio/"$MINIO_BUCKET_PROFILE"
 mc ls myminio/"$MINIO_BUCKET_DOCS"
+

@@ -40,3 +40,4 @@ ON DUPLICATE KEY UPDATE fullname=VALUES(fullname);
 GRANT ALL PRIVILEGES ON studentdb.* TO 'clouduser'@'%';
 GRANT ALL PRIVILEGES ON minicloud.* TO 'clouduser'@'%';
 FLUSH PRIVILEGES;
+

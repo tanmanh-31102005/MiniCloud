@@ -96,3 +96,4 @@
     1..10 | ForEach-Object { (Invoke-WebRequest -Uri "http://localhost/" -UseBasicParsing).Headers['X-Upstream-Backend'] }
     ```
   - Hoặc kiểm tra bộ kiểm thử tự động `tests/integration_test.py` (TEST-10).
+

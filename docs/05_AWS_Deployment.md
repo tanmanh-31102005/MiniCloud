@@ -93,3 +93,4 @@ docker compose ps
 curl http://localhost/
 curl http://localhost/student
 ```
+

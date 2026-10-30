@@ -32,3 +32,4 @@ Write-Host " - MinIO S3 Console:        http://localhost:9001     " -ForegroundC
 Write-Host " - Prometheus Monitoring:   http://localhost:9090     " -ForegroundColor White
 Write-Host " - Grafana Observability:   http://localhost:3000     " -ForegroundColor White
 Write-Host "======================================================" -ForegroundColor Cyan
+

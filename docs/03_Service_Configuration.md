@@ -134,3 +134,4 @@
   - `http://localhost/student` -> Chuyển tiếp tới Flask Backend `/student`.
   - `http://localhost/auth/*` -> Chuyển tiếp tới Keycloak IAM.
 - **Headers**: Bổ sung `X-Gateway` và `X-Upstream-Backend` để kiểm chứng luân phiên Round Robin.
+

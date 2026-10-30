@@ -123,3 +123,4 @@ flowchart TD
    - Flask API tích hợp `prometheus_client` xuất metrics chuẩn Prometheus tại endpoint `/metrics`.
    - Prometheus scrape định kỳ 15s các targets: Node Exporter, Flask App, Web Frontend.
    - Grafana tự động nạp Data Source Prometheus và tự động nạp Dashboard `System Health` qua provisioning folder, người dùng mở trình duyệt là thấy ngay biểu đồ mà không cần cấu hình bằng tay.
+

@@ -176,15 +176,22 @@ def get_students_db():
 
 @app.post("/api/students-db")
 def add_student_db():
-    """Thêm một sinh viên mới vào MariaDB (Hỗ trợ kiểm thử CRUD INSERT)."""
+    """Thêm một sinh viên mới vào MariaDB (Hỗ trợ kiểm thử CRUD CREATE)."""
     payload = request.get_json(silent=True)
     if not payload:
         return jsonify(error="Missing or invalid JSON body"), 400
 
     required_fields = ["student_id", "fullname", "dob", "major"]
     for field in required_fields:
-        if field not in payload:
-            return jsonify(error=f"Field '{field}' is required"), 400
+        if field not in payload or not str(payload[field]).strip():
+            return jsonify(error=f"Field '{field}' is required and cannot be empty"), 400
+
+    try:
+        gpa = float(payload.get("gpa", 3.0))
+        if gpa < 0.0 or gpa > 4.0:
+            return jsonify(error="GPA must be between 0.0 and 4.0"), 400
+    except (ValueError, TypeError):
+        return jsonify(error="GPA must be a valid decimal number"), 400
 
     try:
         conn = get_db_connection()
@@ -194,18 +201,127 @@ def add_student_db():
                 VALUES (%s, %s, %s, %s, %s);
             """
             cursor.execute(sql, (
-                payload["student_id"],
-                payload["fullname"],
-                payload["dob"],
-                payload["major"],
-                payload.get("gpa", 3.0)
+                payload["student_id"].strip(),
+                payload["fullname"].strip(),
+                payload["dob"].strip(),
+                payload["major"].strip(),
+                gpa
             ))
             conn.commit()
             new_id = cursor.lastrowid
         conn.close()
-        return jsonify(message="Student inserted successfully", id=new_id), 201
+        return jsonify(
+            message="Student created successfully",
+            id=new_id,
+            student_id=payload["student_id"]
+        ), 201
+    except pymysql.err.IntegrityError as err:
+        logger.warning(f"Integrity error (e.g. duplicate student_id): {err}")
+        return jsonify(error="Duplicate entry or constraint violation", details=str(err)), 400
     except pymysql.MySQLError as err:
+        logger.error(f"Database insert error: {err}")
         return jsonify(error="Database insert error", details=str(err)), 500
+
+@app.get("/api/students-db/<int:student_id>")
+def get_single_student_db(student_id):
+    """Lấy chi tiết một sinh viên theo ID (CRUD READ SINGLE)."""
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, student_id, fullname, dob, major, gpa, created_at FROM students WHERE id = %s;",
+                (student_id,)
+            )
+            record = cursor.fetchone()
+        conn.close()
+
+        if not record:
+            return jsonify(error="Student not found", id=student_id), 404
+
+        if record.get("dob"):
+            record["dob"] = str(record["dob"])
+        if record.get("created_at"):
+            record["created_at"] = str(record["created_at"])
+        if "gpa" in record and record["gpa"] is not None:
+            record["gpa"] = float(record["gpa"])
+
+        return jsonify(source="mariadb_studentdb", data=record), 200
+    except pymysql.MySQLError as err:
+        return jsonify(error="Database query error", details=str(err)), 500
+
+@app.put("/api/students-db/<int:student_id>")
+def update_student_db(student_id):
+    """Cập nhật thông tin sinh viên theo ID (CRUD UPDATE)."""
+    payload = request.get_json(silent=True)
+    if not payload:
+        return jsonify(error="Missing or invalid JSON body"), 400
+
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            # Check if student exists
+            cursor.execute("SELECT id, student_id, fullname, dob, major, gpa FROM students WHERE id = %s;", (student_id,))
+            existing = cursor.fetchone()
+            if not existing:
+                conn.close()
+                return jsonify(error="Student not found for update", id=student_id), 404
+
+            # Update fields
+            fullname = payload.get("fullname", existing["fullname"])
+            dob = payload.get("dob", str(existing["dob"]))
+            major = payload.get("major", existing["major"])
+            gpa = float(payload.get("gpa", existing["gpa"]))
+
+            if gpa < 0.0 or gpa > 4.0:
+                conn.close()
+                return jsonify(error="GPA must be between 0.0 and 4.0"), 400
+
+            sql = """
+                UPDATE students
+                SET fullname = %s, dob = %s, major = %s, gpa = %s
+                WHERE id = %s;
+            """
+            cursor.execute(sql, (fullname, dob, major, gpa, student_id))
+            conn.commit()
+
+        conn.close()
+        return jsonify(
+            message="Student updated successfully",
+            id=student_id,
+            updated={
+                "fullname": fullname,
+                "dob": dob,
+                "major": major,
+                "gpa": gpa
+            }
+        ), 200
+    except pymysql.MySQLError as err:
+        logger.error(f"Database update error: {err}")
+        return jsonify(error="Database update error", details=str(err)), 500
+
+@app.delete("/api/students-db/<int:student_id>")
+def delete_student_db(student_id):
+    """Xóa một sinh viên theo ID (CRUD DELETE)."""
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id, fullname FROM students WHERE id = %s;", (student_id,))
+            existing = cursor.fetchone()
+            if not existing:
+                conn.close()
+                return jsonify(error="Student not found for deletion", id=student_id), 404
+
+            cursor.execute("DELETE FROM students WHERE id = %s;", (student_id,))
+            conn.commit()
+        conn.close()
+        return jsonify(
+            message="Student deleted successfully",
+            id=student_id,
+            deleted_name=existing["fullname"]
+        ), 200
+    except pymysql.MySQLError as err:
+        logger.error(f"Database delete error: {err}")
+        return jsonify(error="Database delete error", details=str(err)), 500
 
 @app.get("/secure")
 @app.get("/api/secure")
@@ -296,3 +412,4 @@ def secure_resource():
 if __name__ == "__main__":
     logger.info("Starting MyMiniCloud Application Backend Server on port 8081...")
     app.run(host="0.0.0.0", port=8081)
+

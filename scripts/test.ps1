@@ -6,3 +6,4 @@ Write-Host "     CHẠY KIỂM THỬ TÍCH HỢP HỆ THỐNG MYMINICLOUD      "
 Write-Host "======================================================" -ForegroundColor Cyan
 
 python tests/integration_test.py
+

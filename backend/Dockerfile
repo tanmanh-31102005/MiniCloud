@@ -24,3 +24,4 @@ HEALTHCHECK --interval=15s --timeout=5s --retries=3 \
   CMD curl -f http://127.0.0.1:8081/health || exit 1
 
 CMD ["python", "app.py"]
+

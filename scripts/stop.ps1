@@ -9,3 +9,4 @@ docker compose stop
 
 Write-Host "`nToan bo container da duoc tam dung an toan." -ForegroundColor Green
 docker compose ps
+

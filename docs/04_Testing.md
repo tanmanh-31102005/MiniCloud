@@ -135,3 +135,4 @@ SUMMARY: 10/10 Tests Passed.
   1..10 | ForEach-Object { (Invoke-WebRequest -Uri "http://localhost/" -UseBasicParsing).Headers['X-Upstream-Backend'] }
   ```
 - **Kỳ vọng**: Địa chỉ backend upstream trả về luân phiên giữa 2 IP của `web-frontend-server1` và `web-frontend-server2`.
+

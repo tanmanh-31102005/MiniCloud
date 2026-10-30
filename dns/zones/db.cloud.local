@@ -1,0 +1,22 @@
+$TTL 1H
+@   IN SOA  ns.cloud.local. admin.cloud.local. (
+            2026103001  ; Serial
+            1H          ; Refresh
+            15M         ; Retry
+            1W          ; Expire
+            1H )        ; Minimum TTL
+
+; Name Servers
+    IN NS   ns.cloud.local.
+
+; Service A Records
+ns                      IN A    127.0.0.1
+web-frontend-server     IN A    10.10.10.10
+web-frontend-server1    IN A    10.10.10.11
+web-frontend-server2    IN A    10.10.10.12
+app-backend             IN A    10.10.10.20
+application-backend     IN A    10.10.10.20
+minio                   IN A    10.10.10.30
+keycloak                IN A    10.10.10.40
+db                      IN A    10.10.10.50
+gateway                 IN A    10.10.10.1

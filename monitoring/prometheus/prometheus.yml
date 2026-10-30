@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 1. Scrape Host / Node metrics via Node Exporter
+  - job_name: 'node'
+    static_configs:
+      - targets: ['monitoring-node-exporter-server:9100']
+
+  # 2. Scrape Flask Backend Application metrics
+  - job_name: 'flask-backend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['application-backend-server:8081']
+
+  # 3. Scrape Web Frontend Server
+  - job_name: 'web'
+    static_configs:
+      - targets: ['web-frontend-server1:80', 'web-frontend-server2:80']

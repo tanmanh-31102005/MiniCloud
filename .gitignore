@@ -1,0 +1,28 @@
+# Environment variables
+.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Docker volumes and persistent data (if local bind mount)
+object-storage-server/data/
+relational-database-server/data/
+monitoring-grafana-dashboard-server/data/
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Temporary test logs and preview files
+extracted_doc_preview.txt
+*.log
+scratch/

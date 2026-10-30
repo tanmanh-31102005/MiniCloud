@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài viết 3: Giám sát với Prometheus & Grafana | MyMiniCloud</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #0f172a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.8;
+        }
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+        .header-content { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+        nav { margin-top: 1.5rem; }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 500;
+        }
+        nav a:hover { background: var(--primary); }
+        .article-container {
+            max-width: 800px;
+            margin: 2.5rem auto;
+            padding: 2.5rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .meta-tag {
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        h2 { font-size: 1.5rem; color: var(--secondary); margin: 2rem 0 1rem 0; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+        p { margin-bottom: 1.25rem; font-size: 1.05rem; }
+        ul { margin-left: 1.5rem; margin-bottom: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        code { background: #f1f5f9; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.95rem; }
+        .quote {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <h1>MyMiniCloud – Bài Viết Kỹ Thuật</h1>
+        <nav>
+            <a href="/">Trang Chủ</a>
+            <a href="/blog/">← Quay lại danh mục Blog</a>
+        </nav>
+    </div>
+</header>
+
+<main class="article-container">
+    <span class="meta-tag">Chuyên đề 03 • Observability & Monitoring</span>
+    <h1>Giám Sát Tài Nguyên Hệ Thống Với Prometheus & Trực Quan Hóa Cùng Grafana</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">Tác giả: Nhóm Đồ Án MyMiniCloud | Cập nhật: 2026</p>
+
+    <div class="quote">
+        "Bạn không thể tối ưu hóa hoặc bảo vệ những gì mà bạn không thể đo lường và quan sát."
+    </div>
+
+    <h2>1. Mô hình giám sát kéo (Pull-based) của Prometheus</h2>
+    <p>
+        Trong thế giới Cloud Computing, <strong>Prometheus</strong> là tiêu chuẩn thực tế (de-facto standard) cho việc thu thập số liệu dạng chuỗi thời gian (Time-series Metrics). Khác với mô hình Push (nơi máy chủ giám sát thụ động chờ các node gửi tin báo), Prometheus chủ động gửi HTTP GET request định kỳ (chu kỳ scrape interval, thường là 15 giây) đến các endpoint <code>/metrics</code> của từng dịch vụ.
+    </p>
+
+    <h2>2. Thu thập chỉ số phần cứng qua Node Exporter</h2>
+    <p>
+        Để thu thập các chỉ số tài nguyên cấp hệ thống (CPU, Bộ nhớ RAM, Lưu lượng Network I/O, Ổ đĩa), chúng ta triển khai container <code>monitoring-node-exporter-server</code> lắng nghe tại cổng <code>9100</code>. Container này đọc trực tiếp thông tin từ hệ thống tập tin <code>/proc</code> và <code>/sys</code> của Linux kernel và định dạng chúng theo chuẩn Prometheus exposition format.
+    </p>
+
+    <h2>3. Tự động hóa nạp cấu hình Dashboard trên Grafana (Provisioning)</h2>
+    <p>
+        Thông thường khi mới khởi chạy Grafana, kỹ sư phải đăng nhập, tạo Data Source kết nối Prometheus và dựng từng biểu đồ thủ công. Trong dự án <strong>MyMiniCloud</strong>, chúng ta áp dụng kỹ thuật <strong>Infrastructure as Code (IaC)</strong> cho Observability bằng cách sử dụng cơ chế Provisioning:
+    </p>
+    <ul>
+        <li><code>datasources/prometheus.yml</code>: Tự động khai báo và kết nối nguồn dữ liệu Prometheus ngay khi container khởi động.</li>
+        <li><code>dashboards/system-health.json</code>: Tự động khởi tạo sẵn Dashboard <em>System Health</em> hiển thị 3 biểu đồ trọng yếu: <strong>CPU Usage (%)</strong>, <strong>Memory Usage (MB/GB)</strong> và <strong>Network Traffic</strong>.</li>
+    </ul>
+
+    <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+        <a href="/blog/blog2.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Bài trước: Microservices & API Gateway</a>
+        <a href="/blog/" style="color: var(--primary); text-decoration: none; font-weight: 600;">Xem tất cả bài viết →</a>
+    </div>
+</main>
+
+<footer>
+    <p>MyMiniCloud Knowledge Base • Sinh viên thực hiện đồ án Cloud Computing</p>
+</footer>
+
+</body>
+</html>

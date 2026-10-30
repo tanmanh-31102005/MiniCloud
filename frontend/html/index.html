@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMiniCloud — Cloud Infrastructure Platform</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --accent: #10b981;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.25);
+            color: #60a5fa;
+            border: 1px solid #3b82f6;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        p.subtitle { color: #94a3b8; font-size: 1.15rem; max-width: 700px; margin: 0 auto 1.5rem auto; }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        nav a:hover, nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .server-indicator {
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            padding: 0.85rem 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+        .server-tag {
+            font-family: monospace;
+            background: #0284c7;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            color: var(--secondary);
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        .service-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-bottom: 1.25rem;
+        }
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+            background: white;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <span class="badge">Cloud Infrastructure Lab</span>
+        <h1>MyMiniCloud – Home</h1>
+        <p class="subtitle">Mô phỏng hạ tầng Điện toán Đám mây thu nhỏ với 9 dịch vụ cốt lõi chạy trên Docker Compose & Docker Network (cloud-net)</p>
+        <nav>
+            <a href="/" class="active">Trang Chủ</a>
+            <a href="/blog/">Blog Kỹ Thuật (3 Bài)</a>
+            <a href="/api/hello" target="_blank">Flask API (/api/hello)</a>
+            <a href="/student" target="_blank">Students JSON (/student)</a>
+            <a href="/api/students-db" target="_blank">MariaDB API (/api/students-db)</a>
+            <a href="/auth/" target="_blank">Keycloak IAM</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <div class="server-indicator">
+        <div>
+            <strong>Load Balancing Status:</strong> Yêu cầu của bạn đang được xử lý bởi Node Frontend:
+        </div>
+        <div>
+            <span class="server-tag" id="served-by-tag">Web-Frontend-Server</span>
+        </div>
+    </div>
+
+    <h2 class="section-title">9 Dịch Vụ Cốt Lõi Trong Hạ Tầng MyMiniCloud</h2>
+    <div class="grid">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">1. Web Frontend Server</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">Cung cấp website giao diện tĩnh và Blog kỹ thuật. Hỗ trợ 2 máy chủ Web chạy cơ chế cân bằng tải Round Robin.</p>
+            <a href="/blog/" class="btn">Đọc Blog</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">2. Application Backend API</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">Python Flask Microservice cung cấp REST API, trích xuất dữ liệu JSON sinh viên, kết nối CSDL và xác thực token.</p>
+            <a href="/student" target="_blank" class="btn">Xem /student JSON</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">3. Relational Database</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">MariaDB lưu trữ CSDL quan hệ studentdb, duy trì dữ liệu qua Docker Volume bền vững với script khởi tạo tự động.</p>
+            <a href="/api/students-db" target="_blank" class="btn btn-outline">Truy Vấn CSDL</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">4. Authentication & IAM</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">Keycloak OIDC Provider quản lý định danh người dùng tập trung, tạo Realm MyMiniCloud và cấp phát JWT token.</p>
+            <a href="/auth/" target="_blank" class="btn">Keycloak Console</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">5. Object Storage (S3)</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">MinIO lưu trữ đối tượng phi cấu trúc. Tự động tạo bucket profile-pics (ảnh avatar) và documents (tài liệu PDF).</p>
+            <a href="http://localhost:9001" target="_blank" class="btn btn-outline">MinIO Console (:9001)</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">6. Internal DNS Server</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">BIND9 quản lý Zone phân giải tên miền nội bộ cloud.local cho phép các container ánh xạ tên miền dịch vụ linh hoạt.</p>
+            <span class="btn btn-outline" style="cursor: default;">Port 1053/udp</span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">7. Monitoring Server</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">Prometheus định kỳ scrape metrics tài nguyên từ Node Exporter, metrics HTTP từ Flask Backend và Web Server.</p>
+            <a href="http://localhost:9090/targets" target="_blank" class="btn">Prometheus Targets</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">8. Visualization Dashboard</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">Grafana hiển thị biểu đồ trực quan CPU, RAM, Network Traffic với Dashboard System Health được cấu hình tự động.</p>
+            <a href="http://localhost:3000" target="_blank" class="btn">Grafana (:3000)</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">9. API Gateway & Proxy</span>
+                <span class="service-status"></span>
+            </div>
+            <p class="card-desc">Nginx Gateway là điểm tiếp nhận duy nhất trên cổng 80, định tuyến path-based và cân bằng tải Round Robin giữa 2 Web Node.</p>
+            <span class="btn btn-outline" style="cursor: default;">Port 80 (Active)</span>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <p>Đồ án Cloud Computing: Xây dựng Hệ thống Cloud Infrastructure với Docker Compose | MyMiniCloud Platform</p>
+</footer>
+
+<script>
+    fetch('/server-info')
+        .then(r => r.json())
+        .then(data => {
+            if (data.server) {
+                document.getElementById('served-by-tag').innerText = data.server;
+            }
+        })
+        .catch(() => {
+            document.getElementById('served-by-tag').innerText = window.location.host;
+        });
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "id": "MyMiniCloud",
+  "realm": "MyMiniCloud",
+  "displayName": "MyMiniCloud Identity Realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "clients": [
+    {
+      "clientId": "flask-app",
+      "name": "Flask Backend Application Client",
+      "description": "Public OIDC Client for MyMiniCloud Backend and API Gateway",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "fullScopeAllowed": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "access.token.lifespan": "3600"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "sv01",
+      "enabled": true,
+      "email": "sv01@myminicloud.local",
+      "firstName": "Van An",
+      "lastName": "Nguyen",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-myminicloud"
+      ]
+    },
+    {
+      "username": "sv02",
+      "enabled": true,
+      "email": "sv02@myminicloud.local",
+      "firstName": "Thi Bich",
+      "lastName": "Tran",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-myminicloud"
+      ]
+    }
+  ]
+}

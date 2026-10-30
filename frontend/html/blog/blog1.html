@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài viết 1: Docker & Containerization | MyMiniCloud</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #0f172a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.8;
+        }
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+        .header-content { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+        nav { margin-top: 1.5rem; }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 500;
+        }
+        nav a:hover { background: var(--primary); }
+        .article-container {
+            max-width: 800px;
+            margin: 2.5rem auto;
+            padding: 2.5rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .meta-tag {
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        h2 { font-size: 1.5rem; color: var(--secondary); margin: 2rem 0 1rem 0; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+        p { margin-bottom: 1.25rem; font-size: 1.05rem; }
+        ul { margin-left: 1.5rem; margin-bottom: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        code { background: #f1f5f9; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.95rem; }
+        .quote {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <h1>MyMiniCloud – Bài Viết Kỹ Thuật</h1>
+        <nav>
+            <a href="/">Trang Chủ</a>
+            <a href="/blog/">← Quay lại danh mục Blog</a>
+        </nav>
+    </div>
+</header>
+
+<main class="article-container">
+    <span class="meta-tag">Chuyên đề 01 • Containerization</span>
+    <h1>Tổng Quan Về Docker & Containerization Trong Điện Toán Đám Mây</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">Tác giả: Nhóm Đồ Án MyMiniCloud | Cập nhật: 2026</p>
+
+    <div class="quote">
+        "Containerization đã thay đổi hoàn toàn cách chúng ta đóng gói, vận chuyển và triển khai phần mềm trên môi trường điện toán đám mây."
+    </div>
+
+    <h2>1. Khái niệm Container là gì?</h2>
+    <p>
+        Trong kiến trúc truyền thống, để chạy nhiều ứng dụng cô lập trên một máy chủ vật lý, chúng ta sử dụng máy ảo (Virtual Machine - VM) với Hypervisor. Tuy nhiên, mỗi VM đòi hỏi một hệ điều hành khách (Guest OS) riêng biệt, tiêu tốn dung lượng ổ đĩa lớn và RAM khởi động chậm.
+    </p>
+    <p>
+        <strong>Container</strong> giải quyết triệt để bài toán này bằng cách đóng gói mã nguồn, môi trường thực thi, thư viện và biến cấu hình vào một khối thống nhất nhưng chia sẻ chung Linux Kernel của máy chủ Host thông qua các tính năng cốt lõi như <code>cgroups</code> và <code>namespaces</code>. Nhờ đó, container khởi động chỉ trong vài giây và tiêu hao rất ít tài nguyên.
+    </p>
+
+    <h2>2. Vai trò của Docker Network (cloud-net)</h2>
+    <p>
+        Trong đồ án <strong>MyMiniCloud</strong>, chúng ta không để các container chạy riêng lẻ trên mạng <code>bridge</code> mặc định mà khởi tạo mạng do người dùng định nghĩa mang tên <code>cloud-net</code>. Lợi ích vượt trội bao gồm:
+    </p>
+    <ul>
+        <li><strong>Automatic Service Discovery:</strong> Các container gọi nhau bằng tên dịch vụ (ví dụ: <code>http://application-backend-server:8081</code>) thay vì phụ thuộc vào IP động dễ thay đổi khi khởi động lại.</li>
+        <li><strong>Network Isolation:</strong> Cô lập toàn bộ 9 dịch vụ trong vùng an toàn nội bộ, chỉ expose ra ngoài những cổng thật sự cần thiết thông qua Reverse Proxy.</li>
+    </ul>
+
+    <h2>3. Lưu trữ bền vững với Docker Volume</h2>
+    <p>
+        Mặc định, dữ liệu bên trong container có tính chất tạm thời (ephemeral) — khi container bị xoá, dữ liệu sinh ra trong quá trình chạy sẽ mất đi. Với các dịch vụ đòi hỏi lưu trữ dữ liệu bền bỉ như <strong>MariaDB</strong> và <strong>MinIO</strong>, Docker Volume được sử dụng để ánh xạ thư mục lưu trữ thực tế trên máy chủ Host vào container. Điều này đảm bảo khi nâng cấp hoặc khởi động lại container, toàn bộ bảng dữ liệu sinh viên và tệp tin đối tượng vẫn được toàn vẹn.
+    </p>
+
+    <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+        <a href="/blog/" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Danh sách bài viết</a>
+        <a href="/blog/blog2.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Bài tiếp theo: Microservices & API Gateway →</a>
+    </div>
+</main>
+
+<footer>
+    <p>MyMiniCloud Knowledge Base • Sinh viên thực hiện đồ án Cloud Computing</p>
+</footer>
+
+</body>
+</html>

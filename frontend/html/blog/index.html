@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMiniCloud — Blog Kỹ Thuật Điện Toán Đám Mây</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+        .header-content { max-width: 900px; margin: 0 auto; }
+        h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
+        p.subtitle { color: #94a3b8; font-size: 1.1rem; margin-bottom: 1.5rem; }
+        nav { display: flex; justify-content: center; gap: 1rem; }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
+        nav a:hover { background: var(--primary); }
+        .container {
+            max-width: 900px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+        .blog-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .blog-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .blog-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        }
+        .blog-meta {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .blog-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--secondary);
+        }
+        .blog-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .blog-title a:hover {
+            color: var(--primary);
+        }
+        .blog-excerpt {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .read-more {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .read-more:hover {
+            text-decoration: underline;
+        }
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <h1>MyMiniCloud – Blog</h1>
+        <p class="subtitle">Chuyên mục chia sẻ kiến thức chuyên sâu về Containerization, Cloud Architecture & DevOps</p>
+        <nav>
+            <a href="/">← Quay lại Trang Chủ</a>
+            <a href="/blog/" style="background: var(--primary);">Danh Sách Bài Viết</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <div class="blog-list">
+        <!-- Blog 1 -->
+        <article class="blog-item">
+            <div class="blog-meta">Bài viết 01 • Containerization & Docker</div>
+            <h2 class="blog-title"><a href="/blog/blog1.html">1. Tổng Quan Về Docker & Containerization Trong Điện Toán Đám Mây</a></h2>
+            <p class="blog-excerpt">Tìm hiểu bản chất của công nghệ Container, sự khác biệt cốt lõi giữa Virtual Machine (VM) và Container, cách Docker Network và Docker Volumes vận hành để tạo nên một hệ sinh thái Cloud hiện đại.</p>
+            <a href="/blog/blog1.html" class="read-more">Đọc tiếp bài viết →</a>
+        </article>
+
+        <!-- Blog 2 -->
+        <article class="blog-item">
+            <div class="blog-meta">Bài viết 02 • Microservices & Gateway</div>
+            <h2 class="blog-title"><a href="/blog/blog2.html">2. Thiết Kế Kiến Trúc Microservices & API Gateway Với Nginx Reverse Proxy</a></h2>
+            <p class="blog-excerpt">Phân tích vai trò của API Gateway đóng vai trò làm điểm tiếp nhận duy nhất, giải pháp định tuyến theo đường dẫn (Path-based Routing) và thuật toán cân bằng tải Round Robin trong môi trường phân tán.</p>
+            <a href="/blog/blog2.html" class="read-more">Đọc tiếp bài viết →</a>
+        </article>
+
+        <!-- Blog 3 -->
+        <article class="blog-item">
+            <div class="blog-meta">Bài viết 03 • Observability & Monitoring</div>
+            <h2 class="blog-title"><a href="/blog/blog3.html">3. Giám Sát Tài Nguyên Hệ Thống Với Prometheus & Trực Quan Hóa Cùng Grafana</a></h2>
+            <p class="blog-excerpt">Xây dựng kiến trúc quan sát toàn diện cho hạ tầng Cloud bằng Prometheus Metric Scraping, Node Exporter và kỹ thuật nạp trước Dashboard (Provisioning) trên Grafana cho môi trường Production.</p>
+            <a href="/blog/blog3.html" class="read-more">Đọc tiếp bài viết →</a>
+        </article>
+    </div>
+</main>
+
+<footer>
+    <p>MyMiniCloud Knowledge Base • Sinh viên thực hiện đồ án Cloud Computing</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "student_id": "SV001",
+    "name": "Nguyen Van An",
+    "major": "Cloud Computing & DevOps",
+    "gpa": 3.85
+  },
+  {
+    "id": 2,
+    "student_id": "SV002",
+    "name": "Tran Thi Bich",
+    "major": "Software Engineering",
+    "gpa": 3.72
+  },
+  {
+    "id": 3,
+    "student_id": "SV003",
+    "name": "Le Hoang Cuong",
+    "major": "Information Security",
+    "gpa": 3.90
+  },
+  {
+    "id": 4,
+    "student_id": "SV004",
+    "name": "Pham Minh Duc",
+    "major": "Artificial Intelligence",
+    "gpa": 3.65
+  },
+  {
+    "id": 5,
+    "student_id": "SV005",
+    "name": "Doan Phuong Thao",
+    "major": "Computer Networks",
+    "gpa": 3.80
+  }
+]

@@ -130,32 +130,33 @@ Chạy lệnh cURL trong Terminal:
 ```bash
 curl -X POST http://localhost/api/students-db -H "Content-Type: application/json" -d "{\"student_id\":\"SV006\",\"fullname\":\"Vu Dinh Trong\",\"dob\":\"2004-12-01\",\"major\":\"Cloud DevOps\",\"gpa\":3.92}"
 ```
-- **Kết quả**: Trả về **HTTP 201 Created** kèm `id: 6`.
+- **Kết quả**: Trả về **HTTP 201 Created** kèm trường `"id": <ID_MỚI>` (ví dụ `"id": 14` do cơ chế AUTO_INCREMENT trong MariaDB tự tăng sau các lần chạy test).
 
 #### Bước 5.3: Lấy chi tiết sinh viên vừa tạo (READ SINGLE - GET)
+*(Thay số ID bằng ID nhận được ở Bước 5.2, ví dụ 14)*:
 ```bash
-curl http://localhost/api/students-db/6
+curl http://localhost/api/students-db/14
 ```
 - **Kết quả**: Trả về đúng thông tin sinh viên *Vu Dinh Trong*.
 
 #### Bước 5.4: Cập nhật thông tin sinh viên (UPDATE - PUT)
 ```bash
-curl -X PUT http://localhost/api/students-db/6 -H "Content-Type: application/json" -d "{\"gpa\":4.00}"
+curl -X PUT http://localhost/api/students-db/14 -H "Content-Type: application/json" -d "{\"gpa\":4.00}"
 ```
 - **Kết quả**: Điểm GPA được cập nhật thành `4.0`, trả về **HTTP 200 OK**.
 
 #### Bước 5.5: Xóa sinh viên vừa tạo (DELETE)
 ```bash
-curl -X DELETE http://localhost/api/students-db/6
+curl -X DELETE http://localhost/api/students-db/14
 ```
-- **Kết quả**: Trả về **HTTP 200 OK** xác nhận đã xóa. Gọi lại `curl http://localhost/api/students-db/6` sẽ trả về **404 Not Found**.
+- **Kết quả**: Trả về **HTTP 200 OK** xác nhận đã xóa. Gọi lại `curl http://localhost/api/students-db/14` sẽ trả về **404 Not Found**.
 
 #### Bước 5.6: Kiểm tra trực tiếp bên trong CSDL MariaDB
-Chạy lệnh sau để chứng minh dữ liệu nằm thực tế trong CSDL MariaDB:
+Chạy lệnh sau để truy vấn trực tiếp bảng dữ liệu MariaDB (Mật khẩu của tài khoản `clouduser` là `cloudpassword`):
 ```powershell
-docker exec -it relational-database-server mariadb -u clouduser -pstudentdb studentdb -e "SELECT * FROM students;"
+docker exec -it relational-database-server mariadb -u clouduser -pcloudpassword studentdb -e "SELECT * FROM students;"
 ```
-*(Bảng MariaDB in ra rõ ràng trên Terminal).*
+*(Hoặc dùng tài khoản root: `docker exec -it relational-database-server mariadb -uroot -proot studentdb -e "SELECT * FROM students;"`)*
 
 ---
 
@@ -391,3 +392,4 @@ SUMMARY: 10/10 Tests Passed.
 | **3. Cơ chế xác thực JWT trong Backend hoạt động như thế nào? Nó có kiểm tra chữ ký không?** | *"Dạ có ạ. Backend của em sử dụng thư viện `python-jose` lấy Public Keys từ endpoint JWKS của Keycloak (`/certs`) để giải mã và xác thực chữ ký mật mã RS256. Nếu token bị can thiệp dù chỉ 1 ký tự, server sẽ từ chối ngay với mã 401 Unauthorized."* |
 | **4. Các container giao tiếp với nhau bằng cách nào nếu không mở cổng ra ngoài host?** | *"Dạ thưa Thầy/Cô, toàn bộ container cùng tham gia vào bridge network mang tên `cloud-net`. Docker Engine tích hợp sẵn DNS nội bộ, các container gọi nhau trực tiếp bằng tên dịch vụ (ví dụ `http://application-backend-server:8081` hoặc `relational-database-server:3306`) mà không cần map cổng ra host."* |
 | **5. Khi chuyển từ Local lên AWS EC2, hệ thống cần thay đổi những gì?** | *"Dạ em đã chuẩn bị sẵn file `docker-compose.aws.yml`. Trên AWS EC2, ta chỉ cần mở cổng 80 và 22 trên Security Group, đổi biến `PUBLIC_IP` thành IP của EC2, và kéo trực tiếp các image đã đóng gói trên Docker Hub (`nguyenmanh3110/*:1.0.0`) về chạy mà không cần build mã nguồn trên server."* |
+

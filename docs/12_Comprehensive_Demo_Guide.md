@@ -175,17 +175,19 @@ Chứng minh hệ thống IAM (Identity and Access Management) chuyên nghiệp 
 5. Mở mục **Users** -> xem danh sách tài khoản đã provision: **`sv01`**, **`sv02`**.
 
 #### Bước 6.2: Demo gọi API khi CHƯA có Token -> Bị từ chối
-```bash
-curl -i http://localhost:8085/secure
+Trong PowerShell, gõ lệnh `curl.exe` (thêm `.exe` để không bị trùng alias với cmdlet của PowerShell):
+```powershell
+curl.exe -i http://localhost:8085/secure
 ```
-- **Kết quả**: Trả về **`HTTP 401 Unauthorized`** kèm thông báo `{"error": "Missing Authorization header"}`.
+- **Kết quả**: Trả về **`HTTP/1.1 401 UNAUTHORIZED`** kèm thông báo `{"error": "Unauthorized: Missing or malformed Authorization header..."}`.
 
-#### Bước 6.3: Cấp phát Access Token chuẩn OIDC qua cURL
+#### Bước 6.3: Cấp phát Access Token chuẩn OIDC qua Keycloak
+Chạy lệnh PowerShell sau (Mật khẩu tài khoản `sv01` trong Keycloak là **`password123`**):
 ```powershell
 $tokenResponse = Invoke-RestMethod -Uri "http://localhost:8081/realms/MyMiniCloud/protocol/openid-connect/token" -Method Post -Body @{
     client_id  = "flask-app"
     username   = "sv01"
-    password   = "password"
+    password   = "password123"
     grant_type = "password"
 }
 $token = $tokenResponse.access_token
@@ -196,12 +198,13 @@ Write-Host "JWT Token nhận được: $($token.Substring(0, 40))..."
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8085/secure" -Headers @{ Authorization = "Bearer $token" }
 ```
-- **Kết quả**: Trả về **`HTTP 200 OK`**, hiển thị:
+- **Kết quả**: Trả về **`HTTP 200 OK`**, hiển thị thông tin trích xuất từ JWT token:
   ```json
   {
-    "message": "Welcome to protected cloud resource!",
-    "user": "sv01",
-    "email": "sv01@cloud.local"
+    "email": "sv01@myminicloud.local",
+    "preferred_username": "sv01",
+    "message": "Secure resource accessed successfully!",
+    "roles": ["default-roles-myminicloud", "offline_access", "uma_authorization"]
   }
   ```
 

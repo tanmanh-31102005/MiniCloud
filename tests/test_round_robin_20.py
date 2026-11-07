@@ -35,3 +35,4 @@ print(f"Upstream Backend Endpoints: {list(upstream_ips)}")
 
 assert counts['web-frontend-server1'] > 0 and counts['web-frontend-server2'] > 0, "Both web nodes must receive requests!"
 print("\n>>> ROUND ROBIN LOAD BALANCING VERIFIED: 100% OPERATIONAL! <<<")
+

@@ -175,3 +175,4 @@ Thực thi kiểm thử 5 kịch bản bảo mật:
 - **DEF-04: Endpoint `/metrics` của Nginx trả về metrics exposition cơ bản**
   - *Tác động*: Cung cấp metric `nginx_up: 1` cho Prometheus báo UP nhưng chưa thể hiện số lượng active connections động.
   - *Giải pháp*: Giữ cấu hình nhẹ cho bài lab sinh viên; ghi chú phương án nâng cấp dùng `nginx-prometheus-exporter` cho môi trường production nếu cần.
+

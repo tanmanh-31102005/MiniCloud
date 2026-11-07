@@ -40,3 +40,4 @@ print(f"Grafana Provisioned Dashboard Title: '{dash['title']}' (UID: {dash['uid'
 print("Configured Panels:")
 for p in dash["panels"]:
     print(f" - Panel ID {p['id']}: '{p['title']}' (Type: {p['type']})")
+

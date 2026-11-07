@@ -196,3 +196,4 @@ Sau khi chạy lệnh `docker compose up -d` trên máy chủ AWS EC2 Ubuntu, k�
   - Mở SSH Tunnel: `ssh -i key.pem -L 3000:localhost:3000 ubuntu@<EC2_PUBLIC_IP>`
   - Mở trình duyệt: `http://localhost:3000`
   - Tiêu chuẩn: Dashboard `System Health - MyMiniCloud` hiển thị các chỉ số CPU, Memory và Network thời gian thực.
+

@@ -37,3 +37,4 @@ print("\n=== 5. PROMQL: nginx_up ===")
 for r in prom_query("nginx_up"):
     inst = r["metric"].get("instance")
     print(f"Web Node {inst} => Status: {r['value'][1]}")
+

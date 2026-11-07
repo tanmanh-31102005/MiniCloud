@@ -9,7 +9,7 @@ Dự án đồ án học phần **Cloud Computing**: Xây dựng mô phỏng h�
 Hệ thống triển khai 9 vai trò dịch vụ cốt lõi, mô phỏng các dịch vụ thực tế của các nhà cung cấp Cloud (AWS, GCP, Azure):
 
 1. **Web Frontend Server (Nginx)**: 2 Node (`web-frontend-server1` & `web-frontend-server2`) phục vụ website tĩnh và 3 bài viết Blog kỹ thuật.
-2. **Application Backend Server (Flask REST API)**: Cung cấp API `/student` (JSON 5 sinh viên), `/api/students-db` (kết nối MariaDB), `/secure` (xác thực Keycloak OIDC JWT) và xuất Prometheus metrics tại `/metrics`.
+2. **Application Backend Server (Flask REST API)**: Cung cấp API `/student` (JSON 5 sinh viên), `/api/students-db` (Full CRUD MariaDB với Parameterized Queries), `/secure` (xác thực Keycloak OIDC JWT RS256) và xuất Prometheus metrics tại `/metrics`.
 3. **Relational Database Server (MariaDB 11.3)**: Quản lý CSDL `studentdb` với bảng `students`, lưu trữ bền vững qua Docker Volume `mariadb_data`.
 4. **Authentication & Identity Server (Keycloak 24.0)**: Quản lý định danh tập trung (IAM), cấp phát token OIDC qua Realm `MyMiniCloud`.
 5. **Object Storage Server (MinIO S3)**: Lưu trữ tệp tin phi cấu trúc với 2 bucket tự động tạo: `profile-pics` (ảnh avatar) và `documents` (PDF).
@@ -23,20 +23,20 @@ Hệ thống triển khai 9 vai trò dịch vụ cốt lõi, mô phỏng các d�
 
 ## 2. BẢNG DANH MỤC CỔNG DỊCH VỤ (PORT MAPPING)
 
-| STT | Dịch vụ (Service) | Container Name | Cổng Host (Exposed) | Cổng Nội bộ Container | Chức năng chính |
+| STT | Dịch vụ (Service) | Container Name | Cổng Host Local | Cổng Production AWS | Chức năng chính |
 |:---:|:---|:---|:---:|:---:|:---|
-| 1 | **API Gateway (Nginx)** | `api-gateway-proxy-server` | **80** | 80 | Điểm vào chính, Reverse Proxy, Round Robin |
-| 2 | **Web Frontend 1** | `web-frontend-server1` | **8080** | 80 | Web tĩnh, Trang chủ & Blog 1, 2, 3 |
-| 3 | **Web Frontend 2** | `web-frontend-server2` | **8082** | 80 | Web Node 2 phục vụ Load Balancing |
-| 4 | **Flask Backend API** | `application-backend-server` | **8085** | 8081 | REST API, MariaDB ORM, JWT Verification |
-| 5 | **MariaDB Database** | `relational-database-server` | **3306** | 3306 | CSDL `studentdb` & `minicloud` |
-| 6 | **Keycloak IAM** | `authentication-identity-server` | **8081** | 8080 | OIDC/OAuth2 Provider, Admin Console |
-| 7 | **MinIO S3 API** | `object-storage-server` | **9000** | 9000 | S3 Object Storage API |
-| 8 | **MinIO S3 Console** | `object-storage-server` | **9001** | 9001 | Giao diện quản trị Object Storage |
-| 9 | **Internal BIND9 DNS** | `internal-dns-server` | **1053/udp** | 53 | Phân giải tên miền `cloud.local` |
-| 10 | **Node Exporter** | `monitoring-node-exporter-server` | **9100** | 9100 | Số liệu phần cứng máy chủ |
-| 11 | **Prometheus Server** | `monitoring-prometheus-server` | **9090** | 9090 | Thu thập và lưu trữ Time-series Metrics |
-| 12 | **Grafana Dashboard** | `monitoring-grafana-dashboard-server` | **3000** | 3000 | Trực quan hóa biểu đồ giám sát |
+| 1 | **API Gateway (Nginx)** | `api-gateway-proxy-server` | **80** | **80** (Public) | Điểm vào chính, Reverse Proxy, Round Robin |
+| 2 | **Web Frontend 1** | `web-frontend-server1` | **8080** | *Internal only* | Web tĩnh, Trang chủ & Blog 1, 2, 3 |
+| 3 | **Web Frontend 2** | `web-frontend-server2` | **8082** | *Internal only* | Web Node 2 phục vụ Load Balancing |
+| 4 | **Flask Backend API** | `application-backend-server` | **8085** | *Internal only* | REST API, MariaDB Full CRUD, JWT Verification |
+| 5 | **MariaDB Database** | `relational-database-server` | **3306** | *Internal only* | CSDL `studentdb` & `minicloud` |
+| 6 | **Keycloak IAM** | `authentication-identity-server` | **8081** | *Internal only* | OIDC/OAuth2 Provider, Admin Console |
+| 7 | **MinIO S3 API** | `object-storage-server` | **9000** | *Internal only* | S3 Object Storage API |
+| 8 | **MinIO S3 Console** | `object-storage-server` | **9001** | *Internal only* | Giao diện quản trị Object Storage (SSH Tunnel) |
+| 9 | **Internal BIND9 DNS** | `internal-dns-server` | **1053/udp** | *Internal only* | Phân giải tên miền `cloud.local` |
+| 10 | **Node Exporter** | `monitoring-node-exporter-server` | **9100** | *Internal only* | Số liệu phần cứng máy chủ |
+| 11 | **Prometheus Server** | `monitoring-prometheus-server` | **9090** | *Internal only* | Thu thập và lưu trữ Time-series Metrics |
+| 12 | **Grafana Dashboard** | `monitoring-grafana-dashboard-server` | **3000** | *Internal only* | Trực quan hóa biểu đồ giám sát (SSH Tunnel) |
 
 ---
 
@@ -44,72 +44,51 @@ Hệ thống triển khai 9 vai trò dịch vụ cốt lõi, mô phỏng các d�
 
 ```text
 MyMiniCloud/
-├── docker-compose.yml          # Định nghĩa toàn bộ cụm dịch vụ và mạng cloud-net
-├── .env                        # Biến môi trường cục bộ (tài khoản, mật khẩu)
-├── .env.example                # File mẫu biến môi trường
-├── .gitignore                  # Bỏ qua file nhạy cảm và tệp build
+├── docker-compose.yml          # Cấu hình cụm dịch vụ Local Development
+├── docker-compose.aws.yml      # Cấu hình chuẩn hóa Production trên AWS EC2
+├── .env                        # Biến môi trường cục bộ (git-ignored)
+├── .env.example                # File mẫu biến môi trường Local
+├── .env.production.example     # File mẫu biến môi trường Production AWS
+├── .dockerignore               # Loại trừ file rác khi build image
 ├── README.md                   # Hướng dẫn chi tiết
 │
-├── frontend/                   # Mã nguồn Web Frontend Server (Nginx)
-│   ├── Dockerfile
+├── frontend/                   # Máy chủ Web tĩnh (Nginx)
+│   ├── Dockerfile              # Base nginx:1.25-alpine
+│   ├── .dockerignore
 │   ├── nginx.conf
-│   └── html/
-│       ├── index.html          # Trang chủ giới thiệu MyMiniCloud
-│       └── blog/
-│           ├── index.html      # Trang danh mục Blog
-│           ├── blog1.html      # Bài 1: Docker & Containerization
-│           ├── blog2.html      # Bài 2: Microservices & API Gateway
-│           └── blog3.html      # Bài 3: Prometheus & Grafana
+│   └── html/ (index.html, blog/...)
 │
-├── backend/                    # Mã nguồn Application Backend Server (Flask)
-│   ├── Dockerfile
-│   ├── app.py                  # REST API, JWT RS256 Verification, Prometheus Metrics
+├── backend/                    # Microservice Backend API (Flask)
+│   ├── Dockerfile              # Base python:3.11-slim, non-root user 'appuser'
+│   ├── .dockerignore
+│   ├── app.py                  # Full CRUD, OIDC JWT, Prometheus metrics
 │   ├── requirements.txt
-│   └── data/
-│       └── students.json       # Danh sách 5 sinh viên mẫu
+│   └── data/ (students.json)
 │
-├── database/                   # Khởi tạo MariaDB
-│   └── init/
-│       └── 01_init.sql         # Script tạo CSDL studentdb và bảng students
+├── gateway/                    # API Gateway & Round Robin Load Balancer
+│   ├── Dockerfile              # Base nginx:1.25-alpine
+│   ├── .dockerignore
+│   └── nginx.conf              # Reverse proxy /, /api/, /student, /auth/
 │
-├── keycloak/                   # Cấu hình Identity Provider
-│   └── import/
-│       └── myminicloud-realm.json # Realm MyMiniCloud, Client flask-app, User sv01/sv02
-│
-├── minio/                      # Object Storage S3
-│   ├── scripts/
-│   │   └── init-minio.sh       # Script tạo bucket profile-pics và documents
-│   └── data_sample/            # File mẫu avatar.jpg và report.pdf
-│
-├── dns/                        # BIND9 Internal DNS Server
-│   ├── named.conf.options
-│   ├── named.conf.local
-│   └── zones/
-│       └── db.cloud.local      # Zone file phân giải domain nội bộ
-│
-├── monitoring/                 # Hệ thống Observability
-│   ├── prometheus/
-│   │   └── prometheus.yml      # Cấu hình Scrape Targets
-│   └── grafana/
-│       ├── provisioning/       # Auto-provisioning Data Source & Dashboards
-│       └── dashboards/
-│           └── system-health.json # Dashboard CPU, RAM, Network tự động nạp
-│
-├── gateway/                    # API Gateway & Reverse Proxy
-│   └── nginx.conf              # Cấu hình định tuyến và Round Robin Load Balancing
-│
-├── scripts/                    # Scripts quản lý và kiểm thử (PowerShell)
-│   ├── start.ps1               # Khởi động toàn bộ hệ thống
-│   ├── stop.ps1                # Dừng hệ thống
-│   ├── clean.ps1               # Dọn dẹp container và volume
-│   └── test.ps1                # Chạy kiểm thử tự động
-│
-├── tests/
-│   └── integration_test.py     # Bộ kiểm thử tích hợp tự động 10 chức năng
-│
-└── docs/                       # Tài liệu đồ án
-    ├── 01_Architecture.md      # Thiết kế chi tiết và sơ đồ Mermaid
-    └── 07_Report_Materials.md  # Danh mục ảnh minh chứng và kế hoạch báo cáo
+├── database/init/01_init.sql   # Script khởi tạo MariaDB studentdb & students
+├── keycloak/import/            # Realm MyMiniCloud & Client flask-app
+├── minio/                      # Script tạo bucket và dữ liệu mẫu
+├── dns/                        # Zone BIND9 db.cloud.local
+├── monitoring/                 # Cấu hình Prometheus & Dashboards Grafana
+├── scripts/                    # Scripts start.ps1, stop.ps1, clean.ps1, test.ps1
+├── tests/                      # Bộ kiểm thử tự động integration_test.py
+└── docs/                       # Tài liệu thiết kế, kiểm toán và triển khai
+    ├── 01_Architecture.md
+    ├── 02_Local_Setup.md
+    ├── 03_Service_Configuration.md
+    ├── 04_Testing.md
+    ├── 05_AWS_Deployment.md
+    ├── 06_Troubleshooting.md
+    ├── 07_Report_Materials.md
+    ├── 08_Local_Audit_Report.md
+    ├── 09_Cloud_Readiness_Checklist.md
+    ├── 10_Docker_Hub_Release.md
+    └── 11_AWS_Deployment_Preparation.md
 ```
 
 ---
@@ -130,16 +109,14 @@ docker compose up -d --build
 ```powershell
 docker compose ps
 ```
-Đảm bảo tất cả 10 container chính (`web-frontend-server1`, `web-frontend-server2`, `application-backend-server`, `relational-database-server`, `authentication-identity-server`, `object-storage-server`, `internal-dns-server`, `monitoring-node-exporter-server`, `monitoring-prometheus-server`, `monitoring-grafana-dashboard-server`, `api-gateway-proxy-server`) đều ở trạng thái `Up` (hoặc `healthy`).
+Đảm bảo tất cả 10 container chính đều ở trạng thái `Up` (hoặc `healthy`).
 
 ### Bước 3: Chạy bộ kiểm thử tự động (Integration Tests)
 ```powershell
 .\scripts\test.ps1
+# hoặc: python tests/integration_test.py
 ```
-Hoặc:
-```powershell
-python tests/integration_test.py
-```
+Kết quả kiểm thử phải đạt **10/10 PASS**.
 
 ### Bước 4: Kiểm thử thủ công các chức năng mở rộng
 1. **Web & Blog**: Truy cập `http://localhost/` và `http://localhost/blog/`
@@ -149,18 +126,53 @@ python tests/integration_test.py
 5. **MinIO Console**: Truy cập `http://localhost:9001` (Tài khoản: `minioadmin` / `minioadmin`)
 6. **Prometheus Targets**: Truy cập `http://localhost:9090/targets` (Tất cả target trạng thái UP)
 7. **Grafana Dashboard**: Truy cập `http://localhost:3000` (Tài khoản: `admin` / `admin`), mở Dashboard *System Health - MyMiniCloud*
-8. **Round Robin Load Balancing**: Gửi liên tiếp 10 request:
+8. **Round Robin Load Balancing**: Gửi 10 request liên tiếp qua Gateway cổng 80:
    ```powershell
    1..10 | ForEach-Object { (Invoke-WebRequest -Uri "http://localhost/" -UseBasicParsing).Headers['X-Upstream-Backend'] }
    ```
-   Kết quả trả về sẽ luân phiên giữa 2 địa chỉ IP của 2 Web Server!
 
-### Bước 5: Dừng hệ thống khi kết thúc
-```powershell
-.\scripts\stop.ps1
-```
-Hoặc xoá sạch toàn bộ để chạy lại từ đầu:
-```powershell
-.\scripts\clean.ps1
+---
+
+## 5. HƯỚNG DẪN ĐÓNG GÓI VÀ PHÁT HÀNH DOCKER HUB
+
+### 5.1. Đăng nhập Docker Hub qua CLI
+```bash
+docker login
 ```
 
+### 5.2. Gắn tag theo tài khoản Docker Hub của bạn
+```bash
+docker tag myminicloud-backend:1.0.0 <DOCKERHUB_USERNAME>/myminicloud-backend:1.0.0
+docker tag myminicloud-frontend:1.0.0 <DOCKERHUB_USERNAME>/myminicloud-frontend:1.0.0
+docker tag myminicloud-gateway:1.0.0 <DOCKERHUB_USERNAME>/myminicloud-gateway:1.0.0
+```
+
+### 5.3. Đẩy Images lên Docker Hub
+```bash
+docker push <DOCKERHUB_USERNAME>/myminicloud-backend:1.0.0
+docker push <DOCKERHUB_USERNAME>/myminicloud-frontend:1.0.0
+docker push <DOCKERHUB_USERNAME>/myminicloud-gateway:1.0.0
+```
+
+---
+
+## 6. HƯỚNG DẪN TRIỂN KHAI TRÊN AWS EC2
+
+### 6.1. Thiết lập máy chủ EC2 (Ubuntu 24.04 LTS, t3.medium)
+- Cấu hình Security Group: Mở Inbound port **80 (HTTP)** từ `0.0.0.0/0` và port **22 (SSH)** từ `My IP`.
+- Kích hoạt Swapfile 2GB để phòng ngừa tràn RAM.
+- Cài đặt Docker Engine và Docker Compose plugin.
+
+### 6.2. Triển khai bằng docker-compose.aws.yml
+```bash
+git clone https://github.com/<YOUR_GITHUB>/MyMiniCloud.git
+cd MyMiniCloud
+cp .env.production.example .env
+# Chỉnh sửa DOCKERHUB_USERNAME, PUBLIC_IP và mật khẩu trong .env
+
+# Kéo image và khởi chạy
+docker compose -f docker-compose.aws.yml pull
+docker compose -f docker-compose.aws.yml up -d
+docker compose -f docker-compose.aws.yml ps
+```
+Chi tiết từng bước được trình bày tại [docs/11_AWS_Deployment_Preparation.md](docs/11_AWS_Deployment_Preparation.md).

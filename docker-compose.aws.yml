@@ -1,0 +1,272 @@
+# ==============================================================================
+# MyMiniCloud — Production Deployment Compose for AWS EC2 (Ubuntu 24.04 LTS)
+# ==============================================================================
+# Security Policy:
+# - Only API Gateway port 80 (and optional 443) is exposed to the host/public Internet.
+# - All internal microservices (Database, Keycloak, MinIO, Prometheus, Grafana, Web Nodes)
+#   communicate strictly inside the isolated bridge network 'cloud-net'.
+# - Internal administration is accessed securely via SSH Port Forwarding Tunneling:
+#   ssh -i key.pem -L 3000:monitoring-grafana-dashboard-server:3000 ubuntu@<EC2_IP>
+# ==============================================================================
+
+services:
+  # ============================================================================
+  # 1. Web Frontend Server 1 (Primary Node)
+  # ============================================================================
+  web-frontend-server1:
+    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-frontend:${IMAGE_TAG:-1.0.0}
+    container_name: web-frontend-server1
+    hostname: web-frontend-server1
+    expose:
+      - "80"
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  # ============================================================================
+  # 1b. Web Frontend Server 2 (Secondary Node for Round Robin Load Balancing)
+  # ============================================================================
+  web-frontend-server2:
+    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-frontend:${IMAGE_TAG:-1.0.0}
+    container_name: web-frontend-server2
+    hostname: web-frontend-server2
+    expose:
+      - "80"
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  # ============================================================================
+  # 2. Application Backend Server (Flask REST API & Prometheus Metrics)
+  # ============================================================================
+  application-backend-server:
+    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-backend:${IMAGE_TAG:-1.0.0}
+    container_name: application-backend-server
+    hostname: application-backend-server
+    expose:
+      - "8081"
+    environment:
+      DB_HOST: relational-database-server
+      DB_PORT: 3306
+      DB_USER: ${MARIADB_USER:-clouduser}
+      DB_PASSWORD: ${MARIADB_PASSWORD:-cloudpassword}
+      DB_NAME: ${MARIADB_DATABASE:-studentdb}
+      OIDC_ISSUER: http://authentication-identity-server:8080/realms/MyMiniCloud
+      OIDC_AUDIENCE: ${KEYCLOAK_CLIENT_ID:-flask-app}
+    networks:
+      - cloud-net
+    depends_on:
+      relational-database-server:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================================================
+  # 3. Relational Database Server (MariaDB 11.3)
+  # ============================================================================
+  relational-database-server:
+    image: mariadb:11.3
+    container_name: relational-database-server
+    hostname: relational-database-server
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-studentdb}
+      MARIADB_USER: ${MARIADB_USER:-clouduser}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-cloudpassword}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "3306"
+    networks:
+      - cloud-net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ============================================================================
+  # 4. Authentication & Identity Server (Keycloak OIDC)
+  # ============================================================================
+  authentication-identity-server:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: authentication-identity-server
+    hostname: authentication-identity-server
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HOSTNAME: ${PUBLIC_IP:-localhost}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro
+    expose:
+      - "8080"
+    networks:
+      - cloud-net
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    restart: unless-stopped
+
+  # ============================================================================
+  # 5. Object Storage Server (MinIO S3 Compatible)
+  # ============================================================================
+  object-storage-server:
+    image: elestio/minio:latest
+    container_name: object-storage-server
+    hostname: object-storage-server
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9000"
+      - "9001"
+    networks:
+      - cloud-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Helper service to auto-provision buckets and upload sample files
+  object-storage-provisioner:
+    image: elestio/minio:latest
+    container_name: object-storage-provisioner
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET_PROFILE: ${MINIO_BUCKET_PROFILE:-profile-pics}
+      MINIO_BUCKET_DOCS: ${MINIO_BUCKET_DOCS:-documents}
+    volumes:
+      - ./minio/scripts:/scripts:ro
+      - ./minio/data_sample:/data_sample:ro
+    networks:
+      - cloud-net
+    depends_on:
+      object-storage-server:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/scripts/init-minio.sh"]
+    restart: "no"
+
+  # ============================================================================
+  # 6. Internal DNS Server (BIND9)
+  # ============================================================================
+  internal-dns-server:
+    image: internetsystemsconsortium/bind9:9.18
+    container_name: internal-dns-server
+    hostname: internal-dns-server
+    expose:
+      - "53/udp"
+      - "53/tcp"
+    volumes:
+      - ./dns/named.conf:/etc/bind/named.conf:ro
+      - ./dns/named.conf.options:/etc/bind/named.conf.options:ro
+      - ./dns/named.conf.local:/etc/bind/named.conf.local:ro
+      - ./dns/zones:/etc/bind/zones:ro
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  # ============================================================================
+  # 7. Monitoring Host & Resource Collector (Node Exporter)
+  # ============================================================================
+  monitoring-node-exporter-server:
+    image: prom/node-exporter:v1.8.0
+    container_name: monitoring-node-exporter-server
+    hostname: monitoring-node-exporter-server
+    expose:
+      - "9100"
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  # ============================================================================
+  # 8. Monitoring Metrics Server (Prometheus)
+  # ============================================================================
+  monitoring-prometheus-server:
+    image: prom/prometheus:v2.51.2
+    container_name: monitoring-prometheus-server
+    hostname: monitoring-prometheus-server
+    expose:
+      - "9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  # ============================================================================
+  # 9. Visualization & Dashboard Server (Grafana)
+  # ============================================================================
+  monitoring-grafana-dashboard-server:
+    image: grafana/grafana:10.4.2
+    container_name: monitoring-grafana-dashboard-server
+    hostname: monitoring-grafana-dashboard-server
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    expose:
+      - "3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  # ============================================================================
+  # 10. API Gateway / Reverse Proxy & Load Balancer (Single Public Entry Point)
+  # ============================================================================
+  api-gateway-proxy-server:
+    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-gateway:${IMAGE_TAG:-1.0.0}
+    container_name: api-gateway-proxy-server
+    hostname: api-gateway-proxy-server
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - cloud-net
+    depends_on:
+      - web-frontend-server1
+      - web-frontend-server2
+      - application-backend-server
+    restart: unless-stopped
+
+# ==============================================================================
+# Persistent Storage Volumes
+# ==============================================================================
+volumes:
+  mariadb_data:
+    name: myminicloud_mariadb_data
+  minio_data:
+    name: myminicloud_minio_data
+  prometheus_data:
+    name: myminicloud_prometheus_data
+  grafana_data:
+    name: myminicloud_grafana_data
+
+# ==============================================================================
+# Isolated Cloud Network
+# ==============================================================================
+networks:
+  cloud-net:
+    name: cloud-net
+    driver: bridge

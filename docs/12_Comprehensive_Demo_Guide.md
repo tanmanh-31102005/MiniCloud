@@ -261,13 +261,13 @@ Trong **Terminal**, chạy các lệnh truy vấn DNS trực tiếp vào máy ch
 
 ```powershell
 # 1. Bản ghi máy chủ Web Frontend
-docker exec internal-dns-server dig @127.0.0.1 web-frontend-server.cloud.local +short
+docker exec internal-dns-server dig "@127.0.0.1" web-frontend-server.cloud.local +short
 
 # 2. Bản ghi máy chủ Backend
-docker exec internal-dns-server dig @127.0.0.1 app-backend.cloud.local +short
+docker exec internal-dns-server dig "@127.0.0.1" app-backend.cloud.local +short
 
 # 3. Bản ghi máy chủ MinIO Storage
-docker exec internal-dns-server dig @127.0.0.1 minio.cloud.local +short
+docker exec internal-dns-server dig "@127.0.0.1" minio.cloud.local +short
 ```
 
 #### Kết quả hiển thị:

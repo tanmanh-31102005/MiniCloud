@@ -142,6 +142,7 @@ def get_students_json():
         logger.error(f"Unexpected error reading students file: {err}")
         return jsonify(error="Internal server error", details=str(err)), 500
 
+@app.get("/students-db")
 @app.get("/api/students-db")
 def get_students_db():
     """
@@ -174,6 +175,7 @@ def get_students_db():
         logger.error(f"Unexpected database connection error: {err}")
         return jsonify(error="Could not connect to MariaDB", details=str(err)), 503
 
+@app.post("/students-db")
 @app.post("/api/students-db")
 def add_student_db():
     """Thêm một sinh viên mới vào MariaDB (Hỗ trợ kiểm thử CRUD CREATE)."""
@@ -222,6 +224,7 @@ def add_student_db():
         logger.error(f"Database insert error: {err}")
         return jsonify(error="Database insert error", details=str(err)), 500
 
+@app.get("/students-db/<int:student_id>")
 @app.get("/api/students-db/<int:student_id>")
 def get_single_student_db(student_id):
     """Lấy chi tiết một sinh viên theo ID (CRUD READ SINGLE)."""
@@ -249,6 +252,7 @@ def get_single_student_db(student_id):
     except pymysql.MySQLError as err:
         return jsonify(error="Database query error", details=str(err)), 500
 
+@app.put("/students-db/<int:student_id>")
 @app.put("/api/students-db/<int:student_id>")
 def update_student_db(student_id):
     """Cập nhật thông tin sinh viên theo ID (CRUD UPDATE)."""
@@ -299,6 +303,7 @@ def update_student_db(student_id):
         logger.error(f"Database update error: {err}")
         return jsonify(error="Database update error", details=str(err)), 500
 
+@app.delete("/students-db/<int:student_id>")
 @app.delete("/api/students-db/<int:student_id>")
 def delete_student_db(student_id):
     """Xóa một sinh viên theo ID (CRUD DELETE)."""

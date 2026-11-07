@@ -203,6 +203,7 @@ record("TEST-04", "Keycloak OIDC JWT Cryptographic Verification (RS256)", jwt_ok
 # ------------------------------------------------------------------------------
 minio_ok = False
 try:
+    run_cmd("docker exec object-storage-server mc alias set local http://127.0.0.1:9000 minioadmin minioadmin")
     ok_p, p_out = run_cmd("docker exec object-storage-server mc ls local/profile-pics")
     ok_d, d_out = run_cmd("docker exec object-storage-server mc ls local/documents")
     has_buckets = (ok_p and ok_d and "avatar.jpg" in p_out and "report.pdf" in d_out)

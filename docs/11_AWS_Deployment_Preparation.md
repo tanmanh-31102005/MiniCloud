@@ -206,3 +206,4 @@ docker compose -f docker-compose.aws.yml down
 docker run --rm -v myminicloud_mariadb_data:/target -v ~/backups:/backup alpine sh -c "cd /target && rm -rf * && tar -xzf /backup/<FILE_BACKUP>.tar.gz"
 docker compose -f docker-compose.aws.yml up -d
 ```
+

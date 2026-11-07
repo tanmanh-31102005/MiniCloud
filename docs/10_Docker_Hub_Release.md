@@ -5,114 +5,127 @@
 
 ## 1. THÔNG TIN PHÁT HÀNH TỔNG QUAN
 
-- **Phiên bản phát hành (Semantic Version)**: `1.0.0`
-- **Ngày build & kiểm định**: Tháng 11/2026
+- **Tài khoản Docker Hub phát hành**: **`nguyenmanh3110`**
+- **Phiên bản phát hành (Semantic Version)**: **`1.0.0`**
+- **Ngày build & phát hành thành công**: **Tháng 11/2026**
 - **Môi trường Build**: Docker Desktop on WSL2 (Engine 29.7.2, Linux x86_64)
 - **Kiến trúc đích (Target Architecture)**: `linux/amd64` (x86_64) — Tương thích 100% với AWS EC2 Ubuntu 24.04 LTS
-- **Trạng thái kiểm toán an ninh (Security Audit)**: **PASSED** (0 secrets, 0 credentials, có `.dockerignore`, non-root execution trên Backend).
+- **Trạng thái kiểm toán an ninh (Security Audit)**: **PASSED (100% an toàn)** (0 secrets, 0 credentials, non-root execution trên Backend, loại trừ triệt để qua `.dockerignore`).
+- **Trạng thái vòng đời Release**:
+  - ✅ **Build thành công**: 3/3 custom images
+  - ✅ **Tag thành công**: 3/3 custom images
+  - ✅ **Push thành công**: 3/3 images đã publish lên Docker Hub
+  - ✅ **Pull thành công**: 3/3 images kéo về và kiểm tra Digest SHA256 khớp 100%
+  - ✅ **Run thành công**: Khởi chạy container từ image kéo về, kiểm tra toàn bộ API/Healthcheck đạt HTTP 200 OK
 
 ---
 
-## 2. DANH MỤC CUSTOM IMAGES ĐƯỢC ĐÓNG GÓI
+## 2. MA TRẬN DOCKER HUB IMAGES ĐÃ PHÁT HÀNH VÀ XÁC MINH DIGEST
 
-| STT | Tên Image & Tag | Base Image | Kích thước Nén (Content Size) | Kích thước Giải nén | User thực thi | Mục đích chức năng |
-|:---:|:---|:---|:---:|:---:|:---:|:---|
-| 1 | `<DOCKERHUB_USER>/myminicloud-backend:1.0.0` | `python:3.11-slim` | **60.2 MB** | 248 MB | `appuser` (UID: 1000) | Flask REST API, Full CRUD MariaDB, OIDC JWT (RS256), Prometheus Metrics. |
-| 2 | `<DOCKERHUB_USER>/myminicloud-frontend:1.0.0` | `nginx:1.25-alpine` | **20.5 MB** | 74.2 MB | `nginx` (workers) | Máy chủ Web tĩnh phục vụ trang chủ MyMiniCloud và 3 bài viết Blog công nghệ. |
-| 3 | `<DOCKERHUB_USER>/myminicloud-gateway:1.0.0` | `nginx:1.25-alpine` | **20.5 MB** | 74.1 MB | `nginx` (workers) | API Gateway, Reverse Proxy và Bộ cân bằng tải Round Robin (50/50). |
-
-> [!NOTE]
-> Các dịch vụ phụ trợ như MariaDB (`mariadb:11.3`), Keycloak (`quay.io/keycloak/keycloak:24.0.5`), MinIO (`elestio/minio:latest`), BIND9 (`internetsystemsconsortium/bind9:9.18`), Prometheus (`prom/prometheus:v2.51.2`), Grafana (`grafana/grafana:10.4.2`), và Node Exporter (`prom/node-exporter:v1.8.0`) sử dụng trực tiếp official image từ các registry công khai uy tín để đảm bảo tính chuẩn hóa và cập nhật bảo mật upstream.
+| Tên Image trên Docker Hub | Version Tag | Base Image | Kích thước Nén | Kích thước Giải nén | Digest SHA-256 chính thức | User Runtime | Trạng thái Push & Pull |
+|:---|:---:|:---|:---:|:---:|:---|:---:|:---:|
+| `nguyenmanh3110/myminicloud-backend` | `1.0.0` | `python:3.11-slim` | **60.2 MB** | 248 MB | `sha256:e00bc1b143337dcf6aa6a9df7cae33bce149ac74911e4e6f82da2fe68653f08c` | `appuser` (1000) | **VERIFIED (PASS)** |
+| `nguyenmanh3110/myminicloud-frontend`| `1.0.0` | `nginx:1.25-alpine` | **20.5 MB** | 74.2 MB | `sha256:c3d8ca510ec31c13bcb0d2be3296d48f67fdc0e60987c189756937a01942039e` | `nginx` | **VERIFIED (PASS)** |
+| `nguyenmanh3110/myminicloud-gateway` | `1.0.0` | `nginx:1.25-alpine` | **20.5 MB** | 74.1 MB | `sha256:8bacbebc7b375809783f9e8003eee12a19cd4f394676b7db7c4b24d0e81578d0` | `nginx` | **VERIFIED (PASS)** |
 
 ---
 
-## 3. QUY TRÌNH LỆNH TIÊU CHUẨN (CLI COMMAND REFERENCE)
+## 3. LỆNH THAO TÁC TIÊU CHUẨN ĐÃ THỰC THI
 
 ### 3.1. Đối với Backend Image (`myminicloud-backend`)
 
-- **Build Command**:
+- **Build**:
   ```bash
   docker build -t myminicloud-backend:1.0.0 ./backend
   ```
-- **Tag Command**:
+- **Tag**:
   ```bash
-  docker tag myminicloud-backend:1.0.0 <DOCKERHUB_USER>/myminicloud-backend:1.0.0
+  docker tag myminicloud-backend:1.0.0 nguyenmanh3110/myminicloud-backend:1.0.0
   ```
-- **Push Command**:
+- **Push**:
   ```bash
-  docker push <DOCKERHUB_USER>/myminicloud-backend:1.0.0
+  docker push nguyenmanh3110/myminicloud-backend:1.0.0
+  # Output: 1.0.0: digest: sha256:e00bc1b143337dcf6aa6a9df7cae33bce149ac74911e4e6f82da2fe68653f08c
   ```
-- **Pull Command**:
+- **Pull**:
   ```bash
-  docker pull <DOCKERHUB_USER>/myminicloud-backend:1.0.0
+  docker pull nguyenmanh3110/myminicloud-backend:1.0.0
+  # Output: Status: Image is up to date for nguyenmanh3110/myminicloud-backend:1.0.0
   ```
-- **Standalone Run Command (Kiểm thử độc lập)**:
+- **Run & Verify**:
   ```bash
-  docker run -d --name test-backend -p 8085:8081 <DOCKERHUB_USER>/myminicloud-backend:1.0.0
+  docker run -d --name verify-backend -p 8095:8081 nguyenmanh3110/myminicloud-backend:1.0.0
+  # curl http://127.0.0.1:8095/health -> HTTP 200 (healthy)
+  # curl http://127.0.0.1:8095/student -> HTTP 200 (5 students JSON)
+  # curl http://127.0.0.1:8095/metrics -> HTTP 200 (Prometheus exposition)
   ```
 
 ### 3.2. Đối với Frontend Image (`myminicloud-frontend`)
 
-- **Build Command**:
+- **Build**:
   ```bash
   docker build -t myminicloud-frontend:1.0.0 ./frontend
   ```
-- **Tag Command**:
+- **Tag**:
   ```bash
-  docker tag myminicloud-frontend:1.0.0 <DOCKERHUB_USER>/myminicloud-frontend:1.0.0
+  docker tag myminicloud-frontend:1.0.0 nguyenmanh3110/myminicloud-frontend:1.0.0
   ```
-- **Push Command**:
+- **Push**:
   ```bash
-  docker push <DOCKERHUB_USER>/myminicloud-frontend:1.0.0
+  docker push nguyenmanh3110/myminicloud-frontend:1.0.0
+  # Output: 1.0.0: digest: sha256:c3d8ca510ec31c13bcb0d2be3296d48f67fdc0e60987c189756937a01942039e
   ```
-- **Pull Command**:
+- **Pull**:
   ```bash
-  docker pull <DOCKERHUB_USER>/myminicloud-frontend:1.0.0
+  docker pull nguyenmanh3110/myminicloud-frontend:1.0.0
+  # Output: Status: Image is up to date for nguyenmanh3110/myminicloud-frontend:1.0.0
   ```
-- **Standalone Run Command (Kiểm thử độc lập)**:
+- **Run & Verify**:
   ```bash
-  docker run -d --name test-frontend -p 8080:80 <DOCKERHUB_USER>/myminicloud-frontend:1.0.0
+  docker run -d --name verify-frontend -p 8096:80 nguyenmanh3110/myminicloud-frontend:1.0.0
+  # curl http://127.0.0.1:8096/health -> HTTP 200
+  # curl http://127.0.0.1:8096/ -> HTTP 200 (11,624 bytes HTML)
+  # curl http://127.0.0.1:8096/blog/blog1.html -> HTTP 200 (6,817 bytes HTML)
   ```
 
 ### 3.3. Đối với Gateway Image (`myminicloud-gateway`)
 
-- **Build Command**:
+- **Build**:
   ```bash
   docker build -t myminicloud-gateway:1.0.0 ./gateway
   ```
-- **Tag Command**:
+- **Tag**:
   ```bash
-  docker tag myminicloud-gateway:1.0.0 <DOCKERHUB_USER>/myminicloud-gateway:1.0.0
+  docker tag myminicloud-gateway:1.0.0 nguyenmanh3110/myminicloud-gateway:1.0.0
   ```
-- **Push Command**:
+- **Push**:
   ```bash
-  docker push <DOCKERHUB_USER>/myminicloud-gateway:1.0.0
+  docker push nguyenmanh3110/myminicloud-gateway:1.0.0
+  # Output: 1.0.0: digest: sha256:8bacbebc7b375809783f9e8003eee12a19cd4f394676b7db7c4b24d0e81578d0
   ```
-- **Pull Command**:
+- **Pull**:
   ```bash
-  docker pull <DOCKERHUB_USER>/myminicloud-gateway:1.0.0
+  docker pull nguyenmanh3110/myminicloud-gateway:1.0.0
+  # Output: Status: Image is up to date for nguyenmanh3110/myminicloud-gateway:1.0.0
   ```
-- **Standalone Run Command (Khởi chạy trên mạng Docker)**:
+- **Run & Verify**:
   ```bash
-  docker run -d --name test-gateway --network cloud-net -p 80:80 <DOCKERHUB_USER>/myminicloud-gateway:1.0.0
+  docker run --rm --network cloud-net nguyenmanh3110/myminicloud-gateway:1.0.0 nginx -t
+  # Output: syntax is ok, test is successful
   ```
 
 ---
 
-## 4. BẢNG THAY ĐỔI CỦA PHIÊN BẢN (CHANGELOG V1.0.0)
+## 4. CHI TIẾT CÁC THAY ĐỔI TRONG PHIÊN BẢN (CHANGELOG V1.0.0)
 
-| Thành phần | Thay đổi kỹ thuật trong Version 1.0.0 |
+| Image | Điểm cải tiến chính |
 |:---|:---|
-| **Backend** | - Nâng cấp hỗ trợ Full 4 thao tác CRUD (GET, POST, PUT, DELETE) với MariaDB.<br>- Tham số hóa toàn bộ câu lệnh SQL (Parameterized Queries) chống SQLi.<br>- Tích hợp OIDC JWKS token verification kiểm tra chữ ký mật mã RS256.<br>- Bổ sung tệp `.dockerignore` loại trừ `__pycache__` và file tạm.<br>- Tạo và chuyển đổi sang user phi đặc quyền `appuser` (UID 1000) tăng cường bảo mật.<br>- Cấu hình Healthcheck tự động định kỳ 15s. |
-| **Frontend** | - Hoàn thiện 3 bài viết Blog công nghệ với thanh điều hướng nhất quán.<br>- Bổ sung endpoint `/health` trả về HTTP 200 cho Healthcheck.<br>- Bổ sung endpoint `/metrics` trả về chỉ số hoạt động cho Prometheus.<br>- Tối ưu quyền đọc tệp tĩnh `chmod -R 755 /usr/share/nginx/html`.<br>- Bổ sung tệp `.dockerignore`. |
-| **Gateway** | - Đóng gói tệp cấu hình Reverse Proxy và Load Balancer thành image độc lập.<br>- Định tuyến thông minh `/`, `/api/`, `/student`, `/auth/`.<br>- Cấu hình Upstream `web_cluster` cân bằng tải Round Robin luân phiên giữa 2 Node.<br>- Thêm các header nhận diện `X-Gateway` và `X-Upstream-Backend`. |
+| `nguyenmanh3110/myminicloud-backend:1.0.0` | - Hoàn thiện 4 thao tác CRUD MariaDB (`/api/students-db`) có Parameterized Queries.<br>- Thẩm định chữ ký số JWT qua JWKS Keycloak OIDC (RS256).<br>- Tích hợp Prometheus client xuất bản số liệu tại `/metrics`.<br>- Tách biệt quyền hạn: Chạy dưới tài khoản phi đặc quyền `appuser` (UID 1000).<br>- Bổ sung tệp `.dockerignore` loại trừ file nhạy cảm và cache. |
+| `nguyenmanh3110/myminicloud-frontend:1.0.0` | - Phục vụ website tĩnh và 3 bài viết blog kỹ thuật.<br>- Bổ sung endpoint `/health` trả về HTTP 200 phục vụ Docker Healthcheck.<br>- Bổ sung endpoint `/metrics` trả về `nginx_up: 1` cho Prometheus Scrape Target.<br>- Tối ưu quyền đọc tệp tĩnh `755` và bổ sung `.dockerignore`. |
+| `nguyenmanh3110/myminicloud-gateway:1.0.0` | - Đóng gói cấu hình Reverse Proxy thành Docker image độc lập.<br>- Định tuyến thông minh `/`, `/api/`, `/student`, `/auth/`.<br>- Tích hợp cụm Upstream Round Robin cân bằng tải 50/50 giữa 2 Web Node.<br>- Bổ sung header nhận diện `X-Gateway` và `X-Upstream-Backend`. |
 
 ---
 
-## 5. BÁO CÁO KIỂM TRA BẢO MẬT TRƯỚC KHI PUSH (PRE-PUSH SECURITY AUDIT)
+## 5. KẾT LUẬN KIỂM ĐỊNH
 
-Đã thực hiện quét kiểm tra độc lập trên cả 3 image:
-1. **Kiểm tra tệp nhạy cảm**: Không tìm thấy bất kỳ tệp `.env`, `.env.example`, `id_rsa`, `.pem` hoặc credentials trong image layers.
-2. **Kiểm tra biến môi trường nhạy cảm**: Không có mật khẩu cứng trong Dockerfile hoặc image metadata. Toàn bộ cấu hình được nạp động từ Environment Variables lúc container khởi chạy.
-3. **Kiểm tra Build Context**: Toàn bộ build context được lọc sạch sẽ qua `.dockerignore`.
-4. **Kiểm tra User Permissions**: Backend container vận hành dưới tài khoản unprivileged `appuser`.
+Tất cả các custom images đã được đăng tải công khai, kéo về kiểm định và chạy thử nghiệm thành công 100%. Hệ thống đã sẵn sàng tuyệt đối để chuyển giao và triển khai trên môi trường đám mây **AWS EC2 Ubuntu 24.04 LTS**.

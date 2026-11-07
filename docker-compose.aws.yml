@@ -14,7 +14,7 @@ services:
   # 1. Web Frontend Server 1 (Primary Node)
   # ============================================================================
   web-frontend-server1:
-    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-frontend:${IMAGE_TAG:-1.0.0}
+    image: ${DOCKERHUB_USERNAME:-nguyenmanh3110}/myminicloud-frontend:${IMAGE_TAG:-1.0.0}
     container_name: web-frontend-server1
     hostname: web-frontend-server1
     expose:
@@ -27,7 +27,7 @@ services:
   # 1b. Web Frontend Server 2 (Secondary Node for Round Robin Load Balancing)
   # ============================================================================
   web-frontend-server2:
-    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-frontend:${IMAGE_TAG:-1.0.0}
+    image: ${DOCKERHUB_USERNAME:-nguyenmanh3110}/myminicloud-frontend:${IMAGE_TAG:-1.0.0}
     container_name: web-frontend-server2
     hostname: web-frontend-server2
     expose:
@@ -40,7 +40,7 @@ services:
   # 2. Application Backend Server (Flask REST API & Prometheus Metrics)
   # ============================================================================
   application-backend-server:
-    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-backend:${IMAGE_TAG:-1.0.0}
+    image: ${DOCKERHUB_USERNAME:-nguyenmanh3110}/myminicloud-backend:${IMAGE_TAG:-1.0.0}
     container_name: application-backend-server
     hostname: application-backend-server
     expose:
@@ -235,7 +235,7 @@ services:
   # 10. API Gateway / Reverse Proxy & Load Balancer (Single Public Entry Point)
   # ============================================================================
   api-gateway-proxy-server:
-    image: ${DOCKERHUB_USERNAME:-tanmanh31102005}/myminicloud-gateway:${IMAGE_TAG:-1.0.0}
+    image: ${DOCKERHUB_USERNAME:-nguyenmanh3110}/myminicloud-gateway:${IMAGE_TAG:-1.0.0}
     container_name: api-gateway-proxy-server
     hostname: api-gateway-proxy-server
     ports:
@@ -270,3 +270,4 @@ networks:
   cloud-net:
     name: cloud-net
     driver: bridge
+

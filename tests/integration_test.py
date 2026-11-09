@@ -3,14 +3,24 @@ MyMiniCloud - Comprehensive Automated Integration Test Suite (Phase 6.5)
 Validates all 9 core services and 10 extended features with deep technical checks.
 """
 
+import os
 import sys
 import time
 import json
+import base64
 import hashlib
 import subprocess
 import urllib.request
 import urllib.error
 import urllib.parse
+
+# Dynamic credentials (reads from env if provided on EC2, falls back to demo defaults)
+KEYCLOAK_USER = os.getenv("KEYCLOAK_DEMO_USER", "sv01")
+KEYCLOAK_PASSWORD = os.getenv("KEYCLOAK_DEMO_PASSWORD", "password123")
+MINIO_USER = os.getenv("MINIO_ROOT_USER", "minioadmin")
+MINIO_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
+GRAFANA_USER = os.getenv("GF_SECURITY_ADMIN_USER", "admin")
+GRAFANA_PASSWORD = os.getenv("GF_SECURITY_ADMIN_PASSWORD", "admin")
 
 PASS = "\033[92m[PASS]\033[0m"
 FAIL = "\033[91m[FAIL]\033[0m"
@@ -172,8 +182,8 @@ token_url = "http://localhost:8081/realms/MyMiniCloud/protocol/openid-connect/to
 token_payload = {
     "client_id": "flask-app",
     "grant_type": "password",
-    "username": "sv01",
-    "password": "password123"
+    "username": KEYCLOAK_USER,
+    "password": KEYCLOAK_PASSWORD
 }
 code_tok, body_tok, _ = http_post_form(token_url, token_payload)
 token = None
@@ -203,7 +213,7 @@ record("TEST-04", "Keycloak OIDC JWT Cryptographic Verification (RS256)", jwt_ok
 # ------------------------------------------------------------------------------
 minio_ok = False
 try:
-    run_cmd("docker exec object-storage-server mc alias set local http://127.0.0.1:9000 minioadmin minioadmin")
+    run_cmd(f"docker exec object-storage-server mc alias set local http://127.0.0.1:9000 {MINIO_USER} {MINIO_PASSWORD}")
     ok_p, p_out = run_cmd("docker exec object-storage-server mc ls local/profile-pics")
     ok_d, d_out = run_cmd("docker exec object-storage-server mc ls local/documents")
     has_buckets = (ok_p and ok_d and "avatar.jpg" in p_out and "report.pdf" in d_out)
@@ -254,9 +264,10 @@ record("TEST-07", "Prometheus Scrape Targets Status (All UP)", targets_up,
 # Test 8: Grafana Observability Dashboard & PromQL Proxy
 # ------------------------------------------------------------------------------
 code_graf, body_graf, _ = http_get("http://localhost:3000/api/health")
+graf_auth_header = "Basic " + base64.b64encode(f"{GRAFANA_USER}:{GRAFANA_PASSWORD}".encode()).decode()
 graf_ds_code, graf_ds_body, _ = http_get(
     "http://localhost:3000/api/datasources/proxy/1/api/v1/query?query=up",
-    headers={"Authorization": "Basic YWRtaW46YWRtaW4="}
+    headers={"Authorization": graf_auth_header}
 )
 graf_ok = (code_graf == 200 and graf_ds_code == 200 and "result" in graf_ds_body)
 record("TEST-08", "Grafana Observability & PromQL Proxy Query Execution", graf_ok,

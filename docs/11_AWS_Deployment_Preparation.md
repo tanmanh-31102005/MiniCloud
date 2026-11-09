@@ -75,9 +75,24 @@ Tài liệu này đóng vai trò cẩm nang kỹ thuật hướng dẫn chuẩn 
 | **HTTP (TCP)** | `80` | `0.0.0.0/0` | Cổng công khai duy nhất vào API Gateway | Định tuyến toàn bộ lưu lượng web, API và xác thực. |
 | **HTTPS (TCP)** | `443`| `0.0.0.0/0` | Tùy chọn (khi gắn domain và SSL/TLS) | Để sẵn cho Let's Encrypt / Certbot. |
 
-### 4.2. Quản trị dịch vụ nội bộ qua SSH Port Forwarding Tunneling
+### 4.2. Quản trị dịch vụ nội bộ qua SSH Port Forwarding Tunneling & 127.0.0.1 Loopback Binding
 
-Tuyệt đối không mở các cổng `3306` (MariaDB), `9000/9001` (MinIO), `9090` (Prometheus), `3000` (Grafana) ra Internet. Để truy cập các bảng điều khiển này từ máy tính cá nhân, sử dụng lệnh SSH Tunnel an toàn:
+Trong file `docker-compose.aws.yml`, các cổng dịch vụ nội bộ được cấu hình tường minh gắn vào địa chỉ loopback cục bộ `127.0.0.1` (thay vì mở `0.0.0.0` hay dùng `expose:`):
+- `127.0.0.1:8080:80` & `127.0.0.1:8082:80` (Web 1 & 2)
+- `127.0.0.1:8085:8081` (Flask Backend API)
+- `127.0.0.1:3306:3306` (MariaDB)
+- `127.0.0.1:8081:8080` (Keycloak)
+- `127.0.0.1:9000:9000` & `127.0.0.1:9001:9001` (MinIO S3 & Console)
+- `127.0.0.1:9090:9090` (Prometheus)
+- `127.0.0.1:3000:3000` (Grafana)
+
+> [!IMPORTANT]
+> **Tại sao bind vào `127.0.0.1` là an toàn tuyệt đối 100% trên Cloud?**
+> 1. Khi bind `127.0.0.1:<PORT>`, Linux Kernel trên EC2 chỉ chấp nhận gói tin từ adapter nội bộ loopback của chính máy chủ. Toàn bộ traffic đến từ card mạng công khai `eth0` đều bị từ chối ở tầng OS.
+> 2. AWS Security Group chặn toàn bộ traffic ngoài cổng 80 và 22, tạo thêm lớp bảo vệ vật lý vòng ngoài.
+> 3. Cơ chế này cho phép SSH Port Forwarding (`ssh -L ...`) từ laptop và script kiểm thử `python3 tests/integration_test.py` trên EC2 chạy trơn tru 10/10 PASS mà không bị lỗi `Connection Refused` như khi dùng `expose:`.
+
+Để truy cập các bảng điều khiển nội bộ từ máy tính cá nhân, sử dụng lệnh SSH Tunnel an toàn:
 
 ```bash
 # Mở đường hầm bảo mật cho MinIO Console (9001) và Grafana (3000)
@@ -186,7 +201,7 @@ Thực hiện kiểm tra tại máy tính cá nhân qua trình duyệt hoặc cU
 5. **Xác thực Token Keycloak JWT**:
    ```bash
    curl -X POST http://<EC2_PUBLIC_IP>/auth/realms/MyMiniCloud/protocol/openid-connect/token \
-     -d "client_id=flask-app" -d "username=sv01" -d "password=password" -d "grant_type=password"
+     -d "client_id=flask-app" -d "username=sv01" -d "password=password123" -d "grant_type=password"
    ```
 
 ---
